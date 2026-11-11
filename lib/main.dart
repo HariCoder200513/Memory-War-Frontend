@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -9,10 +9,10 @@ import 'features/authentication/data/repositories/auth_repository.dart';
 import 'features/authentication/data/services/auth_service.dart';
 import 'features/authentication/presentation/providers/auth_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  AppConfig.setEnvironment(Environment.development);
+  await dotenv.load(fileName: '.env');
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,

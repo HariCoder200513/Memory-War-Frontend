@@ -1,4 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exceptions.dart';
 import '../models/auth_models.dart';
@@ -15,7 +16,13 @@ class AuthRepository {
     GoogleSignIn? googleSignIn,
   })  : _authService = authService,
         _apiClient = apiClient,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: ['email']);
+        _googleSignIn = googleSignIn ??
+            GoogleSignIn(
+              scopes: ['email'],
+              serverClientId: AppConfig.googleClientId.isNotEmpty
+                  ? AppConfig.googleClientId
+                  : null,
+            );
 
   Future<AuthResponse> register({required String email, required String password}) async {
     final response = await _authService.register(RegisterRequest(email: email, password: password));
