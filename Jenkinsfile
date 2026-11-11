@@ -69,13 +69,13 @@ pipeline {
                             cat > .env << EOF
 API_BASE_URL=http://${params.EC2_HOST}:8080/api/v1
 API_BASE_URL_IOS=http://${params.EC2_HOST}:8080/api/v1
-GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+GOOGLE_CLIENT_ID=\${GOOGLE_CLIENT_ID}
 CONNECTION_TIMEOUT=30
 RECEIVE_TIMEOUT=30
 ENVIRONMENT=development
 EOF
                             flutter build apk --release
-                        '''
+                        """
                     }
                 }
                 archiveArtifacts artifacts: "${FRONTEND_DIR}/build/app/outputs/flutter-apk/app-release.apk",
