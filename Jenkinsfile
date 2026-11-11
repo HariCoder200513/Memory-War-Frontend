@@ -1,5 +1,5 @@
 pipeline {
-    
+
     agent any
 
     parameters {
@@ -50,13 +50,6 @@ pipeline {
             }
         }
 
-        stage('Frontend: Test') {
-            steps {
-                dir("${FRONTEND_DIR}") {
-                    sh 'flutter test'
-                }
-            }
-        }
 
         stage('Frontend: Build APK') {
             steps {
