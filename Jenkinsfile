@@ -34,10 +34,24 @@ pipeline {
         stage('Frontend: Setup') {
             steps {
                 dir("${FRONTEND_DIR}") {
-                    sh '''
-                        flutter --version
-                        flutter pub get
-                    '''
+                    withCredentials([
+                        string(credentialsId: 'mw-google-client-id', variable: 'MW_GOOGLE_CLIENT_ID')
+                    ]) {
+                        sh """
+touch .env
+cat > .env <<ENVEOF
+API_BASE_URL=http://${params.EC2_HOST}:8080/api/v1
+API_BASE_URL_IOS=http://${params.EC2_HOST}:8080/api/v1
+GOOGLE_CLIENT_ID=\${MW_GOOGLE_CLIENT_ID}
+CONNECTION_TIMEOUT=30
+RECEIVE_TIMEOUT=30
+ENVIRONMENT=development
+ENVEOF
+echo '.env written:' && cat .env
+flutter --version
+flutter pub get
+                        """
+                    }
                 }
             }
         }
@@ -54,22 +68,7 @@ pipeline {
         stage('Frontend: Build APK') {
             steps {
                 dir("${FRONTEND_DIR}") {
-                    withCredentials([
-                        string(credentialsId: 'mw-google-client-id', variable: 'MW_GOOGLE_CLIENT_ID')
-                    ]) {
-                        sh """
-cat > .env <<ENVEOF
-API_BASE_URL=http://${params.EC2_HOST}:8080/api/v1
-API_BASE_URL_IOS=http://${params.EC2_HOST}:8080/api/v1
-GOOGLE_CLIENT_ID=\${MW_GOOGLE_CLIENT_ID}
-CONNECTION_TIMEOUT=30
-RECEIVE_TIMEOUT=30
-ENVIRONMENT=development
-ENVEOF
-echo '.env written:' && cat .env
-flutter build apk --release
-                        """
-                    }
+                    sh 'flutter build apk --release'
                 }
                 archiveArtifacts artifacts: "${FRONTEND_DIR}/build/app/outputs/flutter-apk/app-release.apk",
                                  fingerprint: true
