@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'EC2_HOST', defaultValue: '', description: 'EC2 instance public IP or hostname to deploy to')
+    }
+
     environment {
         APP_NAME       = 'memory-wars'
         FLUTTER_HOME   = '/opt/flutter'
@@ -132,12 +136,14 @@ EOF
         // ─────────────────────────────────────
         stage('Deploy Backend to EC2') {
             when {
-                branch 'main'
+                allOf {
+                    branch 'main'
+                    expression { params.EC2_HOST?.trim() }
+                }
             }
             steps {
                 withCredentials([
                     sshUserPrivateKey(credentialsId: 'mw-ec2-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                    string(credentialsId: 'mw-ec2-host', variable: 'EC2_HOST'),
                     string(credentialsId: 'mw-database-url', variable: 'DATABASE_URL'),
                     string(credentialsId: 'mw-jwt-secret', variable: 'JWT_SECRET'),
                     string(credentialsId: 'mw-google-client-id', variable: 'GOOGLE_CLIENT_ID'),
@@ -152,12 +158,14 @@ EOF
                         chmod 600 "$SSH_KEY"
 
                         # Copy binary to EC2
+                        EC2_TARGET="${EC2_USER}@${EC2_HOST}"
+
                         scp -o StrictHostKeyChecking=no -i "$SSH_KEY" \
                             ${BACKEND_DIR}/${BINARY_NAME} \
-                            ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/${BINARY_NAME}.new
+                            ${EC2_TARGET}:${DEPLOY_DIR}/${BINARY_NAME}.new
 
                         # Deploy: write .env, swap binary, restart
-                        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ${EC2_USER}@${EC2_HOST} << 'DEPLOY_SCRIPT'
+                        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ${EC2_TARGET} << 'DEPLOY_SCRIPT'
                             set -e
                             cd /opt/memory-wars
 
