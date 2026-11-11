@@ -55,14 +55,13 @@ pipeline {
             steps {
                 dir("${FRONTEND_DIR}") {
                     withCredentials([
-                        string(credentialsId: 'mw-google-client-id', variable: 'GOOGLE_CLIENT_ID')
+                        string(credentialsId: 'mw-google-client-id', variable: 'MW_GOOGLE_CLIENT_ID')
                     ]) {
-                        // Write .env for the Flutter build (bundled as asset)
                         sh """
                             cat > .env << EOF
 API_BASE_URL=http://${params.EC2_HOST}:8080/api/v1
 API_BASE_URL_IOS=http://${params.EC2_HOST}:8080/api/v1
-GOOGLE_CLIENT_ID=\${GOOGLE_CLIENT_ID}
+GOOGLE_CLIENT_ID=\${MW_GOOGLE_CLIENT_ID}
 CONNECTION_TIMEOUT=30
 RECEIVE_TIMEOUT=30
 ENVIRONMENT=development
