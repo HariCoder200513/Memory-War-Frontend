@@ -125,6 +125,32 @@ EOF
         }
 
         // ─────────────────────────────────────
+        //  PUBLISH — APK to GitHub Releases
+        // ─────────────────────────────────────
+        stage('Publish APK to GitHub Release') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([
+                    string(credentialsId: 'mw-github-token', variable: 'GH_TOKEN')
+                ]) {
+                    script {
+                        def tag = "v1.0.0-build.${env.BUILD_NUMBER}"
+                        sh """
+                            gh release create ${tag} \
+                                ${FRONTEND_DIR}/build/app/outputs/flutter-apk/app-release.apk \
+                                --repo HariCoder200513/Memory-War-Frontend \
+                                --title "Memory Wars ${tag}" \
+                                --notes "Build #${env.BUILD_NUMBER} - APK release" \
+                                --latest
+                        """
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────
         //  DEPLOY — Backend to EC2
         // ─────────────────────────────────────
         stage('Deploy Backend to EC2') {
