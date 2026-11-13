@@ -14,7 +14,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-
+env-copy
 # IntelliJ related
 *.iml
 *.ipr

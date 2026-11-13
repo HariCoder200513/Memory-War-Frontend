@@ -44,9 +44,6 @@ pipeline {
         }
 
         stage('Publish to GitHub Release') {
-            when {
-                branch 'main'
-            }
             steps {
                 withCredentials([
                     string(credentialsId: 'mw-github-token', variable: 'GH_TOKEN')
