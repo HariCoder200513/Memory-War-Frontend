@@ -7,7 +7,8 @@ pipeline {
 
     environment {
         FLUTTER_HOME = '/opt/flutter'
-        PATH         = "${FLUTTER_HOME}/bin:${env.PATH}"
+        ANDROID_HOME = '/opt/android-sdk'
+        PATH         = "${FLUTTER_HOME}/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${env.PATH}"
         FRONTEND_DIR = 'memory_wars_mobile'
         BACKEND_DIR  = 'memory_wars_backend'
         BINARY_NAME  = 'memory-wars-server'
