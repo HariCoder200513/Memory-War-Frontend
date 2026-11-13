@@ -9,7 +9,6 @@ pipeline {
         FLUTTER_HOME = '/opt/flutter'
         ANDROID_HOME = '/opt/android-sdk'
         PATH         = "${FLUTTER_HOME}/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${env.PATH}"
-        FRONTEND_DIR = 'memory_wars_mobile'
         BACKEND_DIR  = 'memory_wars_backend'
         BINARY_NAME  = 'memory-wars-server'
         DEPLOY_DIR   = '/opt/memory-wars'
@@ -31,31 +30,26 @@ pipeline {
                 withCredentials([
                     file(credentialsId: 'mw-flutter-env', variable: 'FLUTTER_ENV')
                 ]) {
-                    dir("${FRONTEND_DIR}") {
-                        sh '''
-                            cp "$FLUTTER_ENV" .env
-                            ls -la .env
-                            flutter pub get
-                        '''
-                    }
+                    sh '''
+                        cp "$FLUTTER_ENV" .env
+                        chmod 644 .env
+                        ls -la .env
+                        flutter pub get
+                    '''
                 }
             }
         }
 
         stage('Frontend: Analyze') {
             steps {
-                dir("${FRONTEND_DIR}") {
-                    sh 'flutter analyze --no-fatal-infos'
-                }
+                sh 'flutter analyze --no-fatal-infos'
             }
         }
 
         stage('Frontend: Build APK') {
             steps {
-                dir("${FRONTEND_DIR}") {
-                    sh 'flutter build apk --release'
-                }
-                archiveArtifacts artifacts: "${FRONTEND_DIR}/build/app/outputs/flutter-apk/app-release.apk",
+                sh 'flutter build apk --release'
+                archiveArtifacts artifacts: 'build/app/outputs/flutter-apk/app-release.apk',
                                  fingerprint: true
             }
         }
@@ -109,7 +103,7 @@ pipeline {
                         def tag = "v1.0.0-build.${env.BUILD_NUMBER}"
                         sh """
                             gh release create ${tag} \
-                                ${FRONTEND_DIR}/build/app/outputs/flutter-apk/app-release.apk \
+                                build/app/outputs/flutter-apk/app-release.apk \
                                 --repo HariCoder200513/Memory-War-Frontend \
                                 --title "Memory Wars ${tag}" \
                                 --notes "Build #${env.BUILD_NUMBER}" \
