@@ -57,17 +57,23 @@ pipeline {
         // ───────────── BACKEND ─────────────
 
         stage('Backend: Setup') {
+            when {
+                expression { fileExists("${BACKEND_DIR}/go.mod") }
+            }
             steps {
                 dir("${BACKEND_DIR}") {
                     sh '''
                         go version
-                        go mod download
+                        go mod download all
                     '''
                 }
             }
         }
 
         stage('Backend: Vet') {
+            when {
+                expression { fileExists("${BACKEND_DIR}/go.mod") }
+            }
             steps {
                 dir("${BACKEND_DIR}") {
                     sh 'go vet ./...'
@@ -76,6 +82,9 @@ pipeline {
         }
 
         stage('Backend: Build') {
+            when {
+                expression { fileExists("${BACKEND_DIR}/go.mod") }
+            }
             steps {
                 dir("${BACKEND_DIR}") {
                     sh '''
@@ -121,6 +130,7 @@ pipeline {
                 allOf {
                     branch 'main'
                     expression { params.EC2_HOST?.trim() }
+                    expression { fileExists("${BACKEND_DIR}/${BINARY_NAME}") }
                 }
             }
             steps {
