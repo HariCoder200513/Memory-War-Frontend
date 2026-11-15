@@ -73,8 +73,24 @@ class AuthRepository {
     return response.verified;
   }
 
+  Future<void> verifyCode(String code) async {
+    await _authService.verifyCode(code);
+  }
+
   Future<void> resendVerificationEmail() async {
     await _authService.resendVerificationEmail();
+  }
+
+  Future<void> setUsername(String username) async {
+    await _authService.setUsername(username);
+  }
+
+  Future<bool> checkUsername(String username) async {
+    return _authService.checkUsername(username);
+  }
+
+  Future<void> setAvatar(String avatar) async {
+    await _authService.setAvatar(avatar);
   }
 
   Future<void> logout() async {

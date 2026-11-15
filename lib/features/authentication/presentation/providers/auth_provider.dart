@@ -153,6 +153,32 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> verifyCode(String code) async {
+    _status = AuthStatus.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.verifyCode(code);
+      if (_user != null) {
+        _user = _user!.copyWith(emailVerified: true);
+      }
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Verification failed. Please try again.';
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> checkEmailVerification() async {
     try {
       return await _repository.checkEmailVerification();
@@ -174,6 +200,58 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setUsername(String username) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.setUsername(username);
+      if (_user != null) {
+        _user = _user!.copyWith(username: username);
+      }
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> checkUsername(String username) async {
+    try {
+      return await _repository.checkUsername(username);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setAvatar(String avatar) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.setAvatar(avatar);
+      if (_user != null) {
+        _user = _user!.copyWith(avatar: avatar);
+      }
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
       return false;
     }
   }

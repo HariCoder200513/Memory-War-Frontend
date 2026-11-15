@@ -50,10 +50,10 @@ class AppStrings {
 
   // Verify Email
   static const checkYourEmail = 'Check your email';
-  static const verifyEmailDesc = "We've sent a verification link to";
-  static const iVerifiedMyEmail = "I've verified my email";
+  static const verifyEmailDesc = "We've sent a 6-digit verification code to";
+  static const verifyButton = 'Verify';
   static const openEmailApp = 'Open email app';
-  static const resendEmail = 'Resend email';
+  static const resendEmail = 'Resend code';
   static const wrongAddress = 'Wrong address?';
 
   // Forgot Password

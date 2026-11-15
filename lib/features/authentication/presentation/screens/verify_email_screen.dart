@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -18,9 +19,24 @@ class VerifyEmailScreen extends StatefulWidget {
 }
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
-  bool _isChecking = false;
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  bool _isVerifying = false;
   bool _isResending = false;
   String? _error;
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  String get _code => _controllers.map((c) => c.text).join();
 
   String get _maskedEmail {
     final parts = widget.email.split('@');
@@ -30,28 +46,48 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     return '$masked@${parts[1]}';
   }
 
-  Future<void> _checkVerification() async {
+  void _onCodeChanged(int index, String value) {
+    if (value.length == 1 && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    }
+    if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+    setState(() => _error = null);
+
+    if (_code.length == 6) {
+      _verifyCode();
+    }
+  }
+
+  Future<void> _verifyCode() async {
+    final code = _code;
+    if (code.length != 6) {
+      setState(() => _error = 'Please enter the 6-digit code');
+      return;
+    }
+
     setState(() {
-      _isChecking = true;
+      _isVerifying = true;
       _error = null;
     });
 
     final provider = context.read<AuthProvider>();
-    final verified = await provider.checkEmailVerification();
+    final success = await provider.verifyCode(code);
 
     if (!mounted) return;
 
-    if (verified) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+    if (success) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/profile-setup/username', (_) => false);
     } else {
       setState(() {
-        _isChecking = false;
-        _error = 'Email not verified yet. Please check your inbox and click the verification link.';
+        _isVerifying = false;
+        _error = provider.error ?? 'Invalid code. Please try again.';
       });
     }
   }
 
-  Future<void> _resendEmail() async {
+  Future<void> _resendCode() async {
     setState(() {
       _isResending = true;
       _error = null;
@@ -62,10 +98,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
     if (mounted) {
       setState(() => _isResending = false);
+      for (final c in _controllers) {
+        c.clear();
+      }
+      _focusNodes[0].requestFocus();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Verification email sent!',
+            'New code sent!',
             style: GoogleFonts.inter(color: AppColors.textPrimary),
           ),
           backgroundColor: AppColors.cardBackground,
@@ -96,7 +136,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 const SizedBox(height: AppSpacing.md),
                 const MwBackButton(),
                 const Spacer(flex: 2),
-                // Email icon
                 Container(
                   width: 64,
                   height: 64,
@@ -139,6 +178,54 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(6, (index) {
+                    return SizedBox(
+                      width: 48,
+                      height: 56,
+                      child: TextField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          contentPadding: EdgeInsets.zero,
+                          filled: true,
+                          fillColor: AppColors.cardBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: _error != null ? AppColors.error : AppColors.inputBorder,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: _error != null ? AppColors.error : AppColors.inputBorder,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
+                          ),
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (value) => _onCodeChanged(index, value),
+                      ),
+                    );
+                  }),
+                ),
                 if (_error != null) ...[
                   const SizedBox(height: AppSpacing.md),
                   Container(
@@ -148,38 +235,34 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       borderRadius: BorderRadius.circular(AppSpacing.borderRadiusXs),
                       border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                     ),
-                    child: Text(
-                      _error!,
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
                 const Spacer(flex: 3),
                 MwPrimaryButton(
-                  text: AppStrings.iVerifiedMyEmail,
-                  onPressed: _checkVerification,
-                  isLoading: _isChecking,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: double.infinity,
-                  height: AppSpacing.buttonHeight,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    child: Text(
-                      AppStrings.openEmailApp,
-                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500),
-                    ),
-                  ),
+                  text: AppStrings.verifyButton,
+                  onPressed: _verifyCode,
+                  isLoading: _isVerifying,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: _isResending ? null : _resendEmail,
+                      onTap: _isResending ? null : _resendCode,
                       child: Text(
-                        AppStrings.resendEmail,
+                        _isResending ? 'Sending...' : AppStrings.resendEmail,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: _isResending ? AppColors.textTertiary : AppColors.primaryPurple,

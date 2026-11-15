@@ -60,9 +60,42 @@ class AuthService {
     }
   }
 
+  Future<void> verifyCode(String code) async {
+    try {
+      await _apiClient.dio.post('/auth/verify-code', data: {'code': code});
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   Future<void> resendVerificationEmail() async {
     try {
       await _apiClient.dio.post('/auth/verify-email/resend');
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<void> setUsername(String username) async {
+    try {
+      await _apiClient.dio.post('/auth/set-username', data: {'username': username});
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<bool> checkUsername(String username) async {
+    try {
+      final response = await _apiClient.dio.get('/auth/check-username', queryParameters: {'username': username});
+      return response.data['available'] as bool;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<void> setAvatar(String avatar) async {
+    try {
+      await _apiClient.dio.post('/auth/set-avatar', data: {'avatar': avatar});
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

@@ -39,11 +39,15 @@ class AuthResponse {
 class UserProfile {
   final String id;
   final String email;
+  final String? username;
+  final String avatar;
   final bool emailVerified;
 
   UserProfile({
     required this.id,
     required this.email,
+    this.username,
+    this.avatar = 'orbit',
     required this.emailVerified,
   });
 
@@ -51,7 +55,19 @@ class UserProfile {
     return UserProfile(
       id: json['id'] as String,
       email: json['email'] as String,
+      username: json['username'] as String?,
+      avatar: json['avatar'] as String? ?? 'orbit',
       emailVerified: json['email_verified'] as bool? ?? false,
+    );
+  }
+
+  UserProfile copyWith({String? username, String? avatar, bool? emailVerified}) {
+    return UserProfile(
+      id: id,
+      email: email,
+      username: username ?? this.username,
+      avatar: avatar ?? this.avatar,
+      emailVerified: emailVerified ?? this.emailVerified,
     );
   }
 }

@@ -17,8 +17,8 @@ class OnboardingPage extends StatelessWidget {
       child: Column(
         children: [
           const Spacer(flex: 1),
-          SizedBox(
-            height: 280,
+          Flexible(
+            flex: 4,
             child: OnboardingIllustration(type: data.illustrationType),
           ),
           const Spacer(flex: 1),
@@ -26,18 +26,18 @@ class OnboardingPage extends StatelessWidget {
             data.title,
             textAlign: TextAlign.center,
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 30,
+              fontSize: 28,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
               height: 1.2,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             data.description,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              fontSize: 16,
+              fontSize: 15,
               color: AppColors.textSecondary,
               height: 1.5,
             ),

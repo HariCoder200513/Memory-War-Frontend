@@ -8,6 +8,9 @@ import '../../features/authentication/presentation/screens/verify_email_screen.d
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/reset_password_screen.dart';
 import '../../features/authentication/presentation/screens/home_placeholder_screen.dart';
+import '../../features/profile_setup/presentation/screens/choose_username_screen.dart';
+import '../../features/profile_setup/presentation/screens/pick_avatar_screen.dart';
+import '../../features/profile_setup/presentation/screens/welcome_success_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -30,6 +33,12 @@ class AppRouter {
       case '/reset-password':
         final token = settings.arguments as String? ?? '';
         return _slideRoute(ResetPasswordScreen(token: token), settings);
+      case '/profile-setup/username':
+        return _slideRoute(const ChooseUsernameScreen(), settings);
+      case '/profile-setup/avatar':
+        return _slideRoute(const PickAvatarScreen(), settings);
+      case '/profile-setup/complete':
+        return _fadeRoute(const WelcomeSuccessScreen(), settings);
       case '/home':
         return _fadeRoute(const HomePlaceholderScreen(), settings);
       default:
