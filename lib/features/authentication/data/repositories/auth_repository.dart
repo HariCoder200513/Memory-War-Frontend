@@ -89,8 +89,20 @@ class AuthRepository {
     return _authService.checkUsername(username);
   }
 
+  Future<UserProfile> getProfile() async {
+    return _authService.getProfile();
+  }
+
   Future<void> setAvatar(String avatar) async {
     await _authService.setAvatar(avatar);
+  }
+
+  Future<void> applyForCreator(String message) async {
+    await _authService.applyForCreator(message);
+  }
+
+  Future<Map<String, dynamic>> getCreatorStatus() async {
+    return _authService.getCreatorStatus();
   }
 
   Future<void> logout() async {

@@ -28,7 +28,13 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> checkSession() async {
     try {
-      return await _repository.hasValidSession();
+      final valid = await _repository.hasValidSession();
+      if (valid) {
+        _user = await _repository.getProfile();
+        _status = AuthStatus.authenticated;
+        notifyListeners();
+      }
+      return valid;
     } catch (_) {
       return false;
     }
@@ -253,6 +259,33 @@ class AuthProvider extends ChangeNotifier {
       _error = 'Something went wrong. Please try again.';
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> applyForCreator(String message) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.applyForCreator(message);
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getCreatorStatus() async {
+    try {
+      return await _repository.getCreatorStatus();
+    } catch (_) {
+      return null;
     }
   }
 

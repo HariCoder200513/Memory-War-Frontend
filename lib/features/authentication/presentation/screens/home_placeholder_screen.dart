@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/mw_logo.dart';
+import '../../../profile_setup/data/avatar_data.dart';
+import '../../../profile_setup/presentation/widgets/avatar_painter.dart';
 import '../providers/auth_provider.dart';
 
 class HomePlaceholderScreen extends StatelessWidget {
@@ -11,6 +13,12 @@ class HomePlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final avatar = avatarOptions.firstWhere(
+      (a) => a.id == user?.avatar,
+      orElse: () => avatarOptions.first,
+    );
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -21,53 +29,49 @@ class HomePlaceholderScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const MwLogo(size: 56),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  "You're in the arena",
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+          child: Column(
+            children: [
+              // Top bar with profile avatar
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPadding,
+                  vertical: AppSpacing.md,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Your profile is set. Time to\nput your memory to the test.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: AppSpacing.buttonHeight,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final provider = context.read<AuthProvider>();
-                        await provider.logout();
-                        if (context.mounted) {
-                          Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (_) => false);
-                        }
-                      },
-                      child: Text(
-                        'Sign out',
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const MwLogo(size: 32),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pushNamed('/profile'),
+                      child: AvatarWidget(avatar: avatar, size: 36),
                     ),
+                  ],
+                ),
+              ),
+              // Main content
+              const Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.construction_rounded,
+                        color: AppColors.textTertiary,
+                        size: 48,
+                      ),
+                      SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Game arena coming soon',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -41,6 +41,7 @@ class UserProfile {
   final String email;
   final String? username;
   final String avatar;
+  final String role;
   final bool emailVerified;
 
   UserProfile({
@@ -48,6 +49,7 @@ class UserProfile {
     required this.email,
     this.username,
     this.avatar = 'orbit',
+    this.role = 'player',
     required this.emailVerified,
   });
 
@@ -57,16 +59,18 @@ class UserProfile {
       email: json['email'] as String,
       username: json['username'] as String?,
       avatar: json['avatar'] as String? ?? 'orbit',
+      role: json['role'] as String? ?? 'player',
       emailVerified: json['email_verified'] as bool? ?? false,
     );
   }
 
-  UserProfile copyWith({String? username, String? avatar, bool? emailVerified}) {
+  UserProfile copyWith({String? username, String? avatar, String? role, bool? emailVerified}) {
     return UserProfile(
       id: id,
       email: email,
       username: username ?? this.username,
       avatar: avatar ?? this.avatar,
+      role: role ?? this.role,
       emailVerified: emailVerified ?? this.emailVerified,
     );
   }

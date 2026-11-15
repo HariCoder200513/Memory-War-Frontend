@@ -64,9 +64,19 @@ class _AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 
+  static const _noRetryPaths = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/google',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+  ];
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
+    final path = err.requestOptions.path;
+    if (err.response?.statusCode == 401 && !_noRetryPaths.contains(path)) {
       final refreshToken = await _client.getRefreshToken();
       if (refreshToken != null) {
         try {

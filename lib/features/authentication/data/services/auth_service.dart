@@ -93,9 +93,35 @@ class AuthService {
     }
   }
 
+  Future<UserProfile> getProfile() async {
+    try {
+      final response = await _apiClient.dio.get('/auth/profile');
+      return UserProfile.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   Future<void> setAvatar(String avatar) async {
     try {
       await _apiClient.dio.post('/auth/set-avatar', data: {'avatar': avatar});
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<void> applyForCreator(String message) async {
+    try {
+      await _apiClient.dio.post('/auth/creator/apply', data: {'message': message});
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getCreatorStatus() async {
+    try {
+      final response = await _apiClient.dio.get('/auth/creator/status');
+      return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
