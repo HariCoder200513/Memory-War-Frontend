@@ -1,6 +1,14 @@
 pipeline {
     agent any
 
+    parameters {
+        string(
+            name: 'API_BASE_URL',
+            defaultValue: 'http://54.252.232.85:8081/api/v1',
+            description: 'Backend API base URL (e.g. http://your-server:8081/api/v1)'
+        )
+    }
+
     environment {
         FLUTTER_HOME = '/opt/flutter'
         ANDROID_HOME = '/opt/android-sdk'
@@ -25,6 +33,7 @@ pipeline {
                         chmod 644 .env
                         flutter pub get
                     '''
+                    sh "sed -i 's|^API_BASE_URL=.*|API_BASE_URL=${params.API_BASE_URL}|' .env"
                 }
             }
         }
