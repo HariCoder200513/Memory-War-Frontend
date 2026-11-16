@@ -97,14 +97,6 @@ class AuthRepository {
     await _authService.setAvatar(avatar);
   }
 
-  Future<void> applyForCreator(String message) async {
-    await _authService.applyForCreator(message);
-  }
-
-  Future<Map<String, dynamic>> getCreatorStatus() async {
-    return _authService.getCreatorStatus();
-  }
-
   Future<void> logout() async {
     await _googleSignIn.signOut();
     await _authService.logout();

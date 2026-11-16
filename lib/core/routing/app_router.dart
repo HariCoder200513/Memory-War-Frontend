@@ -12,10 +12,9 @@ import '../../features/profile_setup/presentation/screens/choose_username_screen
 import '../../features/profile_setup/presentation/screens/pick_avatar_screen.dart';
 import '../../features/profile_setup/presentation/screens/welcome_success_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
-import '../../features/creator/presentation/screens/apply_creator_screen.dart';
-import '../../features/creator/presentation/screens/creator_status_screen.dart';
 import '../../features/creator/presentation/screens/creator_studio_screen.dart';
 import '../../features/creator/presentation/screens/submit_game_screen.dart';
+import '../../features/creator/presentation/screens/create_game_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -48,12 +47,10 @@ class AppRouter {
         return _fadeRoute(const HomePlaceholderScreen(), settings);
       case '/profile':
         return _slideRoute(const ProfileScreen(), settings);
-      case '/creator/apply':
-        return _slideRoute(const ApplyCreatorScreen(), settings);
-      case '/creator/status':
-        return _slideRoute(const CreatorStatusScreen(), settings);
       case '/creator/studio':
         return _slideRoute(const CreatorStudioScreen(), settings);
+      case '/creator/create-game':
+        return _slideRoute(const CreateGameScreen(), settings);
       case '/creator/submit-game':
         return _slideRoute(const SubmitGameScreen(), settings);
       default:

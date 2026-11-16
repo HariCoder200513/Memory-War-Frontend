@@ -110,23 +110,6 @@ class AuthService {
     }
   }
 
-  Future<void> applyForCreator(String message) async {
-    try {
-      await _apiClient.dio.post('/auth/creator/apply', data: {'message': message});
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    }
-  }
-
-  Future<Map<String, dynamic>> getCreatorStatus() async {
-    try {
-      final response = await _apiClient.dio.get('/auth/creator/status');
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    }
-  }
-
   Future<void> logout() async {
     try {
       await _apiClient.dio.post('/auth/logout');

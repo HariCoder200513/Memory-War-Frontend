@@ -124,12 +124,12 @@ class ProfileScreen extends StatelessWidget {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPurple.withValues(alpha: 0.15),
+                              color: AppColors.gold,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
-                              Icons.auto_awesome,
-                              color: AppColors.primaryPurple,
+                              Icons.dashboard_rounded,
+                              color: AppColors.primaryBackground,
                               size: 22,
                             ),
                           ),
@@ -159,11 +159,11 @@ class ProfileScreen extends StatelessWidget {
                         height: 44,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pushNamed('/creator/apply');
+                            Navigator.of(context).pushNamed('/creator/studio');
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryPurple,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.gold,
+                            foregroundColor: AppColors.primaryBackground,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
                             ),

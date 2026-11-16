@@ -262,33 +262,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> applyForCreator(String message) async {
-    _error = null;
-    notifyListeners();
-
-    try {
-      await _repository.applyForCreator(message);
-      notifyListeners();
-      return true;
-    } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = 'Something went wrong. Please try again.';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  Future<Map<String, dynamic>?> getCreatorStatus() async {
-    try {
-      return await _repository.getCreatorStatus();
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> logout() async {
     await _repository.logout();
     _user = null;

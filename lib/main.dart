@@ -33,6 +33,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<ApiClient>.value(value: apiClient),
         ChangeNotifierProvider(create: (_) => AuthProvider(authRepository)),
       ],
       child: const MemoryWarsApp(),
