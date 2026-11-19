@@ -144,8 +144,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   int? _selectedPresetIndex = 1;
 
   // ── Step 3 state ──
-  final Set<String> _selectedIcons = {};
-  List<String> _previewLayout = [];
+  String? _focusedIcon;
+  List<String> _cellIcons = [];
 
   // ── Step 4 state ──
   String _cardBack = 'classic';
@@ -176,6 +176,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   int get _pairsNeeded => _totalCells ~/ 2;
   int get _maxScore => _pairsNeeded * 100;
   List<String> get _availableIcons => _categoryIcons[_selectedCategory] ?? [];
+  Set<String> get _selectedIcons => _cellIcons.where((i) => i.isNotEmpty).toSet();
 
   String get _timeLimitDisplay {
     final m = _timeLimitSeconds ~/ 60;
@@ -201,7 +202,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   bool get _isStep2Valid => _isEvenGrid;
 
   bool get _isStep3Valid =>
-      _isEvenGrid && _selectedIcons.length == _pairsNeeded;
+      _isEvenGrid &&
+      _cellIcons.length == _totalCells &&
+      _cellIcons.every((i) => i.isNotEmpty);
 
   bool get _isStep4Valid => true;
   bool get _isStep5Valid => true;
@@ -239,6 +242,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     if (_currentStep < _totalSteps) {
       setState(() {
         _currentStep++;
+        if (_currentStep == 3) _ensureCellIcons();
         if (_currentStep == 6) _initPlayablePreview();
       });
     }
@@ -270,50 +274,56 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       _gridRows = _presets[index].rows;
       _gridColumns = _presets[index].cols;
       _trimIconsToGrid();
-      _regeneratePreview();
     });
+  }
+
+  void _ensureCellIcons() {
+    if (_cellIcons.length != _totalCells) {
+      _cellIcons = List.filled(_totalCells, '');
+      _focusedIcon = null;
+    }
   }
 
   void _trimIconsToGrid() {
-    while (_selectedIcons.length > _pairsNeeded) {
-      _selectedIcons.remove(_selectedIcons.last);
+    if (_cellIcons.isEmpty) return;
+    if (_cellIcons.length > _totalCells) {
+      _cellIcons = _cellIcons.sublist(0, _totalCells);
+    } else if (_cellIcons.length < _totalCells) {
+      _cellIcons = [
+        ..._cellIcons,
+        ...List.filled(_totalCells - _cellIcons.length, ''),
+      ];
     }
+    _focusedIcon = null;
   }
 
-  void _toggleIcon(String icon) {
+  void _onPaletteIconTap(String icon) {
     setState(() {
-      if (_selectedIcons.contains(icon)) {
-        _selectedIcons.remove(icon);
-      } else if (_selectedIcons.length < _pairsNeeded) {
-        _selectedIcons.add(icon);
-      }
-      _regeneratePreview();
+      final count = _cellIcons.where((i) => i == icon).length;
+      if (count >= 2 && _focusedIcon != icon) return;
+      _focusedIcon = _focusedIcon == icon ? null : icon;
     });
   }
 
-  void _regeneratePreview() {
-    final paired = <String>[];
-    for (final icon in _selectedIcons) {
-      paired
-        ..add(icon)
-        ..add(icon);
-    }
-    paired.shuffle();
-    while (paired.length < _totalCells) {
-      paired.add('');
-    }
-    _previewLayout = paired.take(_totalCells).toList();
+  void _onGridCellTap(int index) {
+    if (index >= _cellIcons.length) return;
+    setState(() {
+      if (_cellIcons[index].isNotEmpty) {
+        _cellIcons[index] = '';
+      } else if (_focusedIcon != null) {
+        final count = _cellIcons.where((i) => i == _focusedIcon).length;
+        if (count < 2) {
+          _cellIcons[index] = _focusedIcon!;
+          if (count + 1 >= 2) _focusedIcon = null;
+        }
+      }
+    });
   }
 
   // ── Playable preview (Step 6) ──
 
   void _initPlayablePreview() {
-    final paired = <String>[];
-    for (final icon in _selectedIcons) {
-      paired
-        ..add(icon)
-        ..add(icon);
-    }
+    final paired = List<String>.from(_cellIcons);
     paired.shuffle(Random());
     _gameCards = paired;
     _revealedCards = List.filled(paired.length, false);
@@ -602,7 +612,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   Widget _buildCategoryChip(_GameCategory cat) {
     final selected = _selectedCategory == cat.id;
     return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = cat.id),
+      onTap: () => setState(() {
+        if (_selectedCategory != cat.id) {
+          _selectedCategory = cat.id;
+          _cellIcons = List.filled(_totalCells, '');
+          _focusedIcon = null;
+        }
+      }),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
@@ -695,7 +711,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   _gridRows = v;
                   _syncPresetFromCustom();
                   _trimIconsToGrid();
-                  _regeneratePreview();
                 });
               }),
             ),
@@ -706,7 +721,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   _gridColumns = v;
                   _syncPresetFromCustom();
                   _trimIconsToGrid();
-                  _regeneratePreview();
                 });
               }),
             ),
@@ -863,6 +877,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   // ════════════════════════════════════════════════════════════════════════════
 
   Widget _buildStep3() {
+    _ensureCellIcons();
+    final filledCount = _cellIcons.where((i) => i.isNotEmpty).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -873,22 +889,20 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary)),
         const SizedBox(height: AppSpacing.sm),
-        Text('Pick the icons for your card pairs.',
+        Text(
+            _focusedIcon != null
+                ? 'Tap cells below to place $_focusedIcon'
+                : 'Tap an icon to focus it, then place it on the board.',
             style: GoogleFonts.inter(
                 fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
         const SizedBox(height: AppSpacing.xl),
-        _labelRow('Select card pairs',
-            '${_selectedIcons.length} / $_pairsNeeded'),
-        const SizedBox(height: 4),
-        Text('Each icon appears twice in the grid.',
-            style:
-                GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary)),
+        _labelRow('Icons', '$filledCount / $_totalCells placed'),
         const SizedBox(height: AppSpacing.md),
         _buildIconPalette(),
         const SizedBox(height: AppSpacing.xl),
-        _labelRow('Preview', '$_gridRows × $_gridColumns'),
+        _labelRow('Board', '$_gridRows × $_gridColumns'),
         const SizedBox(height: AppSpacing.md),
-        _buildIconGridPreview(),
+        _buildCellGrid(),
         const SizedBox(height: AppSpacing.xl),
       ],
     );
@@ -896,7 +910,12 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
   Widget _buildIconPalette() {
     final icons = _availableIcons;
-    final count = icons.length.clamp(0, _pairsNeeded + 20);
+    final counts = <String, int>{};
+    for (final icon in _cellIcons) {
+      if (icon.isNotEmpty) counts[icon] = (counts[icon] ?? 0) + 1;
+    }
+    final allFilled = _cellIcons.every((i) => i.isNotEmpty);
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -905,28 +924,76 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
       ),
-      itemCount: count,
+      itemCount: icons.length,
       itemBuilder: (_, i) {
         final icon = icons[i];
-        final selected = _selectedIcons.contains(icon);
-        final canSelect = _selectedIcons.length < _pairsNeeded;
+        final placed = counts[icon] ?? 0;
+        final isFocused = _focusedIcon == icon;
+        final isPaired = placed >= 2;
+
         return GestureDetector(
-          onTap: () => _toggleIcon(icon),
-          child: Container(
+          onTap: () => _onPaletteIconTap(icon),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.primaryPurple.withValues(alpha: 0.25)
-                  : AppColors.cardBackground,
+              color: isFocused
+                  ? AppColors.primaryPurple.withValues(alpha: 0.3)
+                  : isPaired
+                      ? AppColors.success.withValues(alpha: 0.15)
+                      : AppColors.cardBackground,
               borderRadius: BorderRadius.circular(AppSpacing.borderRadiusXs),
               border: Border.all(
-                color: selected ? AppColors.primaryPurple : AppColors.divider,
-                width: selected ? 2 : 1,
+                color: isFocused
+                    ? AppColors.primaryPurple
+                    : isPaired
+                        ? AppColors.success
+                        : AppColors.divider,
+                width: isFocused ? 2.5 : isPaired ? 1.5 : 1,
               ),
+              boxShadow: isFocused
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      )
+                    ]
+                  : null,
             ),
             alignment: Alignment.center,
-            child: Opacity(
-              opacity: selected || canSelect ? 1.0 : 0.3,
-              child: Text(icon, style: const TextStyle(fontSize: 22)),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Opacity(
+                  opacity: (isPaired && !isFocused) || (allFilled && placed == 0)
+                      ? 0.35
+                      : 1.0,
+                  child: Text(icon, style: const TextStyle(fontSize: 22)),
+                ),
+                if (placed > 0 && !isFocused)
+                  Positioned(
+                    right: 2,
+                    bottom: 2,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color:
+                            isPaired ? AppColors.success : AppColors.primaryPurple,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: isPaired
+                          ? const Icon(Icons.check,
+                              size: 10, color: Colors.white)
+                          : Text('$placed',
+                              style: const TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -934,7 +1001,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     );
   }
 
-  Widget _buildIconGridPreview() {
+  Widget _buildCellGrid() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -944,10 +1011,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         border: Border.all(color: AppColors.divider),
       ),
       child: LayoutBuilder(builder: (_, constraints) {
-        const gap = 4.0;
+        const gap = 6.0;
         final cellSize =
             ((constraints.maxWidth - (_gridColumns - 1) * gap) / _gridColumns)
-                .clamp(8.0, 40.0);
+                .clamp(20.0, 50.0);
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(_gridRows, (row) {
@@ -957,28 +1024,57 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_gridColumns, (col) {
                   final idx = row * _gridColumns + col;
-                  final icon =
-                      idx < _previewLayout.length ? _previewLayout[idx] : '';
+                  if (idx >= _cellIcons.length) return const SizedBox.shrink();
+                  final icon = _cellIcons[idx];
+                  final isEmpty = icon.isEmpty;
+                  final canPlace = isEmpty &&
+                      _focusedIcon != null &&
+                      _cellIcons.where((i) => i == _focusedIcon).length < 2;
+
                   return Padding(
                     padding: EdgeInsets.only(left: col > 0 ? gap : 0),
-                    child: Container(
-                      width: cellSize,
-                      height: cellSize,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(4),
+                    child: GestureDetector(
+                      onTap: () => _onGridCellTap(idx),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: cellSize,
+                        height: cellSize,
+                        decoration: BoxDecoration(
+                          color: !isEmpty
+                              ? AppColors.primaryPurple.withValues(alpha: 0.5)
+                              : canPlace
+                                  ? AppColors.primaryPurple
+                                      .withValues(alpha: 0.2)
+                                  : AppColors.primaryPurple
+                                      .withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: canPlace
+                                ? AppColors.primaryPurple
+                                : !isEmpty
+                                    ? AppColors.primaryPurple
+                                        .withValues(alpha: 0.6)
+                                    : AppColors.divider,
+                            width: canPlace ? 2 : 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: !isEmpty
+                            ? FittedBox(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: Text(icon,
+                                      style:
+                                          TextStyle(fontSize: cellSize * 0.6)),
+                                ),
+                              )
+                            : canPlace
+                                ? Icon(Icons.add,
+                                    size: cellSize * 0.3,
+                                    color: AppColors.primaryPurple
+                                        .withValues(alpha: 0.5))
+                                : null,
                       ),
-                      alignment: Alignment.center,
-                      child: icon.isNotEmpty
-                          ? FittedBox(
-                              child: Padding(
-                                padding: const EdgeInsets.all(2),
-                                child: Text(icon,
-                                    style:
-                                        TextStyle(fontSize: cellSize * 0.6)),
-                              ),
-                            )
-                          : null,
                     ),
                   );
                 }),

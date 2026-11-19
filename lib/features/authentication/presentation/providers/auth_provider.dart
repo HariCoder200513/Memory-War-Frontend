@@ -262,6 +262,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshProfile() async {
+    try {
+      final profile = await _repository.getProfile();
+      debugPrint('[AuthProvider] refreshProfile role=${profile.role}');
+      _user = profile;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AuthProvider] refreshProfile failed: $e');
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     _user = null;

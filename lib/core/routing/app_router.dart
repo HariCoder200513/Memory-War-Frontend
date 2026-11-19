@@ -15,6 +15,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/creator/presentation/screens/creator_studio_screen.dart';
 import '../../features/creator/presentation/screens/submit_game_screen.dart';
 import '../../features/creator/presentation/screens/create_game_screen.dart';
+import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -53,6 +54,8 @@ class AppRouter {
         return _slideRoute(const CreateGameScreen(), settings);
       case '/creator/submit-game':
         return _slideRoute(const SubmitGameScreen(), settings);
+      case '/reviewer/dashboard':
+        return _slideRoute(const ReviewerDashboardScreen(), settings);
       default:
         return _fadeRoute(const SplashScreen(), settings);
     }

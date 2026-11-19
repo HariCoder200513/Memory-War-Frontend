@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -7,8 +8,21 @@ import '../../../profile_setup/data/avatar_data.dart';
 import '../../../profile_setup/presentation/widgets/avatar_painter.dart';
 import '../providers/auth_provider.dart';
 
-class HomePlaceholderScreen extends StatelessWidget {
+class HomePlaceholderScreen extends StatefulWidget {
   const HomePlaceholderScreen({super.key});
+
+  @override
+  State<HomePlaceholderScreen> createState() => _HomePlaceholderScreenState();
+}
+
+class _HomePlaceholderScreenState extends State<HomePlaceholderScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().refreshProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +31,9 @@ class HomePlaceholderScreen extends StatelessWidget {
       (a) => a.id == user?.avatar,
       orElse: () => avatarOptions.first,
     );
+    final role = user?.role ?? 'player';
+    final isReviewer = role == 'reviewer' || role == 'admin';
+    final isCreator = role == 'creator' || role == 'admin';
 
     return Scaffold(
       body: Container(
@@ -30,7 +47,6 @@ class HomePlaceholderScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Top bar with profile avatar
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.screenPadding,
@@ -47,26 +63,73 @@ class HomePlaceholderScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              // Main content
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.construction_rounded,
-                        color: AppColors.textTertiary,
-                        size: 48,
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Game arena coming soon',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.construction_rounded,
+                            color: AppColors.textTertiary, size: 48),
+                        const SizedBox(height: AppSpacing.md),
+                        const Text('Game arena coming soon',
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textSecondary)),
+                        const SizedBox(height: 32),
+                        if (isCreator) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: AppSpacing.buttonHeight,
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.of(context)
+                                  .pushNamed('/creator/studio'),
+                              icon:
+                                  const Icon(Icons.brush_outlined, size: 20),
+                              label: Text('Creator Studio',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.gold,
+                                foregroundColor: AppColors.primaryBackground,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.borderRadiusSm)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (isReviewer) ...[
+                          SizedBox(height: isCreator ? 12 : 0),
+                          SizedBox(
+                            width: double.infinity,
+                            height: AppSpacing.buttonHeight,
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.of(context)
+                                  .pushNamed('/reviewer/dashboard'),
+                              icon: const Icon(Icons.rate_review_outlined,
+                                  size: 20),
+                              label: Text('Review Dashboard',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.success,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.borderRadiusSm)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
